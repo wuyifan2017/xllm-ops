@@ -20,3 +20,19 @@ Run existing MTP numerical tests with checkpoint/accepted-token feedback and
 graph replay, then the associated xLLM BF16/INT8 generation regressions.
 Record source/binary/OPP hashes, completed/total counts and raw outputs.
 No A3 hardware run or new performance claim is part of this source delivery.
+
+## MX Torch Adapter Ownership
+
+`torch_adapter/` owns MX dynamic quantization, SwiGLU quantization, RMSNorm
+quantization, Add+RMSNorm quantization, grouped matmul/SwiGLU quantization,
+runtime capability checks, load-time fusion verification and the implementation
+for builds without the complete MX API set. Public declarations are in
+`torch_adapter/include/xllm_ops/mx_quantization.h`.
+
+`cmake/mxfp8.cmake` detects Torch/Torch-NPU/CANN MX capabilities. xLLM includes
+that module and attaches `torch_adapter/` to its existing `xllm_ops` host
+library. The adapter uses the consumer's existing ACLNN invocation helper and
+platform guard; this directory is not part of the standalone CANN OPP build.
+Both enabled and unavailable implementations must be checked after a pointer
+update. The model loader, Linear/MLP/GDN integration and architecture policy
+remain in xLLM.
