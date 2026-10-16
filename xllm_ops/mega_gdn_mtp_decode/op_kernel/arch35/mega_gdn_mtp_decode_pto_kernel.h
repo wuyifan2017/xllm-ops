@@ -1053,7 +1053,7 @@ AICORE PTO_INLINE void RunDeferredNorm(__gm__ bfloat16_t* out_handle,
                                        int32_t sequence_length,
                                        int32_t v_width) {
 #if defined(PTO_NPU_ARCH_A5)
-  constexpr event_t kDeferredNormOutputEvent = EVENT_ID6;
+  event_t kDeferredNormOutputEvent = EVENT_ID6;
 #else
   constexpr auto kDeferredNormOutputEvent = EVENT_ID3;
 #endif
