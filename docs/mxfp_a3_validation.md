@@ -23,11 +23,31 @@ graph replay, then the associated xLLM BF16/INT8 generation regressions.
 Record source/binary/OPP hashes, completed/total counts and raw outputs.
 No A3 hardware run or new performance claim is part of this source delivery.
 
-The October 21 rebase has passed patch application on a fresh Linux checkout
-and Git whitespace checks. Build validation against the latest upstream base
-is in progress. Historical validation of earlier commits does not validate
-this rebase.
+The October 21 rebase has passed patch application on a fresh Linux checkout,
+Git whitespace checks, formatting checks, and an A5 operator build against the
+latest upstream base. Historical validation of earlier commits does not
+validate this rebase.
 All five changed C++ source/header files pass clang-format 20.1.6.
+
+## Build Validation
+
+On 2026-10-21, the rebased source at
+`b55b59e5e3dc9f3531bb5965771eb9d42de6de4e` completed the A5 operator build
+in `wyf_A5_Perf` with CANN 9.1.0 and CATLASS
+`1483c7d245b200c62571a4130e24453bc81c31ed` (the gitlink selected by upstream
+`2ea3c818b847e4e8315be24a4d407dd48ee6593a`). The successful command was:
+
+```bash
+bash build.sh -c ascend950 --no-build-transformer --no-build-flash \
+  --build-dir=<isolated-build-dir>
+```
+
+The build exited with status 0 and produced
+`cann-ops-xllm-custom_linux-x86_64.run` (85,998,983 bytes, SHA256
+`4be86a7f2e15492634241b923a1255987d2c355e728a501c72ab12850cd482c7`).
+This result validates compilation and packaging of this source revision. It
+does not provide a runtime semantic test, a performance measurement, an A3
+hardware run, or a full C-Eval result.
 
 The older A5 causal-convolution, MegaChunkGdn, and non-Qwen operator ports
 already have patch-equivalent changes upstream. MTP draft preparation is
