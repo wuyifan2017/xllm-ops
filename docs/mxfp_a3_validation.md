@@ -1,7 +1,9 @@
 # A5 MTP Optimization, MX Adapter, And Non-A5 Boundary
 
 This branch starts from upstream xllm-ops
-`ed2172dd99fb676fcb5f4dbe0d97934019df0505`.
+`167f7535fc52e53fc65758d81764e19cbbea49a2` (upstream main). The MX work
+was first prepared against `ed2172dd99fb676fcb5f4dbe0d97934019df0505`;
+the rebased branch also retains the mutable A5 PTO event parameter fix.
 Both `mega_gdn_mtp_decode_pto_kernel.h` headers receive A5 conv/norm barrier
 and conversion optimizations with an independent final-output event. Upstream
 host/tiling ABI and kernel signatures are retained.
@@ -20,6 +22,21 @@ Run existing MTP numerical tests with checkpoint/accepted-token feedback and
 graph replay, then the associated xLLM BF16/INT8 generation regressions.
 Record source/binary/OPP hashes, completed/total counts and raw outputs.
 No A3 hardware run or new performance claim is part of this source delivery.
+
+The October 21 rebase has passed patch application on a fresh Linux checkout
+and Git whitespace checks. Its attempted integration build stopped before
+completion because the CATLASS dependency was missing. This branch has no
+new passing build, numerical, performance, or full C-Eval result. Historical
+validation of earlier commits does not validate this rebase.
+All five changed C++ source/header files pass clang-format 20.1.6.
+
+The older A5 causal-convolution, MegaChunkGdn, and non-Qwen operator ports
+already have patch-equivalent changes upstream. MTP draft preparation is
+also already listed in the upstream Ascend950 package. They are retained
+through the upstream base rather than replayed as duplicate commits.
+Uncommitted MegaChunkGdn experiment changes from the old 9e436ee worktree
+are preserved separately and are not part of this MX/MTP source branch.
+
 ## MX Torch Adapter Ownership
 
 `torch_adapter/` owns MX dynamic quantization, SwiGLU quantization, RMSNorm
