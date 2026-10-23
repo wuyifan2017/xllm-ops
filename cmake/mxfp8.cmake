@@ -70,6 +70,15 @@ if(USE_NPU)
   if(XLLM_TORCH_NPU_HAS_MX_SWIGLU)
     add_compile_definitions(XLLM_HAS_NPU_MX_SWIGLU)
   endif()
+  check_cxx_source_compiles([[
+    #include <aclnn_grouped_matmul_swiglu_quant_weight_nz_v2.h>
+    int main() {
+      (void)&aclnnGroupedMatmulSwigluQuantWeightNzV2GetWorkspaceSize;
+    }
+  ]] XLLM_TORCH_NPU_HAS_MX_GROUPED_SWIGLU_NZ)
+  if(XLLM_TORCH_NPU_HAS_MX_GROUPED_SWIGLU_NZ)
+    add_compile_definitions(XLLM_HAS_NPU_MX_GROUPED_SWIGLU_NZ)
+  endif()
 endif()
 if(USE_NPU AND XLLM_ENABLE_NPU_MXFP8 AND XLLM_TORCH_HAS_E8M0)
   check_cxx_source_compiles([[
@@ -80,6 +89,7 @@ if(USE_NPU AND XLLM_ENABLE_NPU_MXFP8 AND XLLM_TORCH_HAS_E8M0)
     #include <aclnn_add_rms_norm_dynamic_mx_quant.h>
     #include <aclnn_quant_matmul_v5.h>
     #include <aclnn_grouped_matmul_swiglu_quant_v2.h>
+    #include <aclnn_grouped_matmul_swiglu_quant_weight_nz_v2.h>
     int main() {
       at::Tensor x;
       (void)at_npu::native::custom_ops::npu_dynamic_mx_quant(
@@ -96,6 +106,7 @@ if(USE_NPU AND XLLM_ENABLE_NPU_MXFP8 AND XLLM_TORCH_HAS_E8M0)
           292, 292, 293, 293, c10::IntArrayRef({1, 1, 32}), std::nullopt);
       (void)&aclnnQuantMatmulV5GetWorkspaceSize;
       (void)&aclnnGroupedMatmulSwigluQuantV2GetWorkspaceSize;
+      (void)&aclnnGroupedMatmulSwigluQuantWeightNzV2GetWorkspaceSize;
     }
   ]] XLLM_TORCH_NPU_CANN_HAS_MXFP8)
   if(XLLM_TORCH_NPU_CANN_HAS_MXFP8)
@@ -106,6 +117,7 @@ endif()
 message(STATUS "NPU MX capabilities: dynamic=${XLLM_TORCH_NPU_HAS_MX_DYNAMIC_QUANT}"
                " matmul=${XLLM_TORCH_NPU_HAS_MX_MATMUL}"
                " swiglu=${XLLM_TORCH_NPU_HAS_MX_SWIGLU}"
+               " grouped_nz=${XLLM_TORCH_NPU_HAS_MX_GROUPED_SWIGLU_NZ}"
                " full=${XLLM_HAS_NPU_MXFP8}")
 if(_mxfp8_try_compile_type STREQUAL "")
   unset(CMAKE_TRY_COMPILE_TARGET_TYPE)

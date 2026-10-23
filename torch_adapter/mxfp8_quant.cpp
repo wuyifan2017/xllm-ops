@@ -13,7 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include <aclnn_grouped_matmul_swiglu_quant_v2.h>
+#include <aclnn_grouped_matmul_swiglu_quant_weight_nz_v2.h>
 #include <torch_npu/csrc/aten/CustomFunctions.h>
+#include <torch_npu/csrc/core/npu/NPUFormat.h>
 
 #include <algorithm>
 #include <cmath>
@@ -33,7 +36,8 @@ bool mxfp8_runtime_available() {
                               "aclnnRmsNormDynamicMxQuant",
                               "aclnnAddRmsNormDynamicMxQuant",
                               "aclnnQuantMatmulV5",
-                              "aclnnGroupedMatmulSwigluQuantV2"};
+                              "aclnnGroupedMatmulSwigluQuantV2",
+                              "aclnnGroupedMatmulSwigluQuantWeightNzV2"};
   for (const char* api : apis) {
     const std::string workspace_api = std::string(api) + "GetWorkspaceSize";
     if (aclnn::detail::get_op_api_func_addr(api) == nullptr ||
@@ -102,23 +106,22 @@ std::tuple<at::Tensor, at::Tensor> mxfp8_grouped_matmul_swiglu_quant(
   int64_t group_list_type = 1;
   c10::IntArrayRef tuning_config;
   double swiglu_limit = 0.0;
-  EXEC_NPU_CMD(aclnnGroupedMatmulSwigluQuantV2,
-               x,
-               weight,
-               weight_scale,
-               empty_list,
-               empty,
-               x_scale,
-               empty,
-               group_list,
-               dequant_mode,
-               dequant_dtype,
-               quant_mode,
-               group_list_type,
-               tuning_config,
-               swiglu_limit,
-               output,
-               output_scale);
+  // The generic entry rejects FRACTAL_NZ storage during workspace validation;
+  // prepacked MoE weights must use the WeightNz V2 entry.
+#define XLLM_GROUPED_MX_ARGS                                                   \
+  x, weight, weight_scale, empty_list, empty, x_scale, empty, group_list,      \
+      dequant_mode, dequant_dtype, quant_mode, group_list_type, tuning_config, \
+      swiglu_limit, output, output_scale
+  if (at_npu::native::get_npu_format(weight[0]) == ACL_FORMAT_FRACTAL_NZ) {
+    TORCH_CHECK(aclnn::detail::get_op_api_func_addr(
+                    "aclnnGroupedMatmulSwigluQuantWeightNzV2") != nullptr,
+                "prepacked MX weights require "
+                "aclnnGroupedMatmulSwigluQuantWeightNzV2");
+    EXEC_NPU_CMD(aclnnGroupedMatmulSwigluQuantWeightNzV2, XLLM_GROUPED_MX_ARGS);
+  } else {
+    EXEC_NPU_CMD(aclnnGroupedMatmulSwigluQuantV2, XLLM_GROUPED_MX_ARGS);
+  }
+#undef XLLM_GROUPED_MX_ARGS
   return std::make_tuple(output, output_scale);
 }
 

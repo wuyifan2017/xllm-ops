@@ -17,6 +17,10 @@ unmapped types instead of defaulting them to ACL_FLOAT.
 The FP4 layout helpers use generic Torch-NPU format APIs. Dynamic quant and
 the W4 SwiGLU call use their individual probes in partial installations.
 RMSNorm and grouped SwiGLU remain behind the full MXFP8 capability flag.
+The grouped MX wrapper selects `aclnnGroupedMatmulSwigluQuantWeightNzV2` when
+the prepacked weight is `FRACTAL_NZ`; the generic V2 entry rejects that
+storage format during workspace validation. Both V2 headers and entry points
+are required by the full capability probe.
 
 ## Regression Harness
 
@@ -36,4 +40,6 @@ Run `run_probe.py <build>/mx_adapter_probe.so --device 0` with an explicitly
 selected idle, healthy Ascend950. Add `--grouped` for the full build.
 The script checks actual ACL tensor descriptor types, numerical W4 matmul,
 FP8 prefill expansion/cache matmul, NZ prepack and fused SwiGLU against CPU
-references. The disabled build's `--disabled` case must reject the GEMM.
+references. With `--grouped` it exercises grouped MX twice, once with ND
+weights (generic entry) and once with `FRACTAL_NZ` weights (WeightNz entry).
+The disabled build's `--disabled` case must reject the GEMM.

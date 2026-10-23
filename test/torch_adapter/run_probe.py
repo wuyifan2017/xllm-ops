@@ -139,26 +139,31 @@ def main():
     if args.grouped:
         gx_cpu = ((torch.arange(32 * k).reshape(32, k) % 7) - 3).bfloat16()
         gq, gs = module.dynamic(gx_cpu.to(device))
-        weights = torch.stack([
+        weights_nd = torch.stack([
             torch.full((k, 256), 1 / 16),
             torch.full((k, 256), 2 / 16),
         ]).to(torch.float8_e4m3fn).to(device)
-        weights = torch_npu.npu_format_cast(weights, 29)
+        weights_nz = torch_npu.npu_format_cast(weights_nd, 29)
+        assert torch_npu.get_npu_format(weights_nd) == 2
+        assert torch_npu.get_npu_format(weights_nz) == 29
         weight_scales = torch.full((2, k // 64, 256, 2), 127, dtype=torch.uint8)
         weight_scales = weight_scales.view(torch.float8_e8m0fnu).to(device)
-        y, sy = module.grouped(
-            gq, [weights], [weight_scales],
-            gs.view(torch.float8_e8m0fnu),
-            torch.tensor([16, 16], dtype=torch.int64, device=device),
-        )
-        assert sy.dtype == torch.float8_e8m0fnu
         expected = torch.cat([
             gx_cpu[:16].float().sum(1) / 16,
             gx_cpu[16:].float().sum(1) / 8,
         ]).reshape(32, 1).expand(32, 128)
         expected = torch.nn.functional.silu(expected) * expected
-        torch.testing.assert_close(_dequant(y, sy), expected, rtol=.15, atol=.03)
-        result["checks"].append("grouped MX E8M0 workspace and CPU oracle")
+        for weights in (weights_nd, weights_nz):
+            y, sy = module.grouped(
+                gq, [weights], [weight_scales],
+                gs.view(torch.float8_e8m0fnu),
+                torch.tensor([16, 16], dtype=torch.int64, device=device),
+            )
+            assert sy.dtype == torch.float8_e8m0fnu
+            torch.testing.assert_close(
+                _dequant(y, sy), expected, rtol=.15, atol=.03,
+            )
+        result["checks"].append("grouped MX ND and WeightNz E8M0 workspace")
     torch.npu.synchronize()
     print(json.dumps(result), flush=True)
 
