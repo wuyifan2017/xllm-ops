@@ -92,7 +92,7 @@ std::tuple<at::Tensor, at::Tensor> mxfp8_grouped_matmul_swiglu_quant(
   auto output_scale = at::empty({m, (n / 2 + 63) / 64, 2},
                                 x.options().dtype(at::kFloat8_e8m0fnu));
   at::Tensor empty;
-  std::vector<at::Tensor> empty_list;
+  torch::TensorList empty_list;
   int64_t dequant_mode = 2;
   int64_t dequant_dtype = 0;
   int64_t quant_mode = 2;
