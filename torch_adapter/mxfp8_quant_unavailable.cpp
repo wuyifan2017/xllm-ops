@@ -46,6 +46,30 @@ std::tuple<at::Tensor, at::Tensor> mxfp8_dynamic_quant(
   unavailable();
 #endif
 }
+
+at::Tensor mxfp8_quant_matmul(const at::Tensor&,
+                              const at::Tensor&,
+                              const at::Tensor&,
+                              const at::Tensor&,
+                              const std::optional<at::Tensor>&,
+                              at::ScalarType) {
+  unavailable();
+}
+
+at::Tensor mxfp4_quant_matmul(const at::Tensor&,
+                              const at::Tensor&,
+                              const at::Tensor&,
+                              const at::Tensor&,
+                              at::ScalarType,
+                              int64_t,
+                              const std::optional<at::Tensor>&) {
+  unavailable();
+}
+
+void mxfp4_prepack_nz_weight(at::Tensor&) { unavailable(); }
+
+at::Tensor mxfp4_prefill_fp8_weight(const at::Tensor&) { unavailable(); }
+
 std::tuple<at::Tensor, at::Tensor> mxfp8_swiglu_quant(const at::Tensor&,
                                                       bool,
                                                       double) {
