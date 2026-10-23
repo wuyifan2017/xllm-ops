@@ -103,7 +103,10 @@ if(USE_NPU AND XLLM_ENABLE_NPU_MXFP8 AND XLLM_TORCH_HAS_E8M0)
     add_compile_definitions(XLLM_HAS_NPU_MXFP8)
   endif()
 endif()
-message(STATUS "NPU MXFP8 capability: ${XLLM_HAS_NPU_MXFP8}")
+message(STATUS "NPU MX capabilities: dynamic=${XLLM_TORCH_NPU_HAS_MX_DYNAMIC_QUANT}"
+               " matmul=${XLLM_TORCH_NPU_HAS_MX_MATMUL}"
+               " swiglu=${XLLM_TORCH_NPU_HAS_MX_SWIGLU}"
+               " full=${XLLM_HAS_NPU_MXFP8}")
 if(_mxfp8_try_compile_type STREQUAL "")
   unset(CMAKE_TRY_COMPILE_TARGET_TYPE)
 else()
